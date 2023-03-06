@@ -8,16 +8,6 @@
 class ConstructionStages
 {
 	private $db;
-	/**
-	 * Summary of validDateRegex
-	 * Regex that checks if a date is valid according to the ISO 8601 standard
-	 */
-	private $validDateRegex = '/^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/';
-	/**
-	 * Summary of validColorCodeRegex
-	 * Regex that checks if a color code is valid according to hex color codes
-	 */
-	private $validColorCodeRegex = '/#([a-fA-F0-9]{3}){1,2}\b/';
 	public function __construct()
 	{
 		$this->db = Api::getDb();
@@ -80,7 +70,7 @@ class ConstructionStages
 	 */
 	public function post(ConstructionStagesCreate $data)
 	{
-		$errors = array();
+		$this->validateFields($data);
 
 		$name = $data->name;
 		$startDate = $data->startDate;
@@ -91,38 +81,16 @@ class ConstructionStages
 		$externalId = $data->externalId;
 		$status = $data->status;
 
-		if (strlen($name) > 255) {
-			$errors[] = "Name exceeds limit of 255 characters!";
-		}
-		if (!(preg_match($this->validDateRegex, $startDate) > 0)) {
-			$errors[] = "Invalid start date, must be in ISO8601 format, i.e. 2022-12-31T14:59:00Z";
-		}
-		if ($endDate != null) {
-			if ((!preg_match($this->validDateRegex, $endDate) > 0)) {
-				$errors[] = "Invalid end date, must be in ISO8601 format, i.e. 2022-12-31T14:59:00Z";
-			}
-			if ($startDate > $endDate) {
-				$errors[] = "End date cannot be before start date!";
-			}
-		}
 		if ($durationUnit != "HOURS" && $durationUnit != "DAYS" && $durationUnit != "WEEKS") {
 			$durationUnit = "DAYS";
 		}
+
 		$duration = $this->calculateDuration($startDate, $endDate, $durationUnit);
-		if ($externalId != null) {
-			if (strlen($externalId) > 255) {
-				$errors[] = "External ID exceeds limit of 255 characters!";
-			}
-		}
-		if ($color != null) {
-			if ((!preg_match($this->validColorCodeRegex, $color))) {
-				$errors[] = "Invalid color code";
-			}
-		}
+
 		if ($status != "NEW" && $status != "PLANNED" && $status != "DELETED") {
 			$status = "NEW";
 		}
-		if (empty($errors)) {
+
 			$stmt = $this->db->prepare("
 			INSERT INTO construction_stages
 			    (name, start_date, end_date, duration, durationUnit, color, externalId, status)
@@ -141,8 +109,6 @@ class ConstructionStages
 			]);
 
 			return $this->getSingle($this->db->lastInsertId());
-		}
-		return $errors;
 	}
 
 	/**
@@ -154,8 +120,8 @@ class ConstructionStages
 	 */
 	public function patch(ConstructionStagesEdit $data)
 	{
-		$errors = array();
-		
+		$this->validateFields($data);
+
 		$id = $data->id;
 		$name = $data->name;
 		$startDate = $data->startDate;
@@ -166,38 +132,15 @@ class ConstructionStages
 		$externalId = $data->externalId;
 		$status = $data->status;
 
-		if (strlen($name) > 255) {
-			$errors[] = "Name exceeds limit of 255 characters!";
-		}
-		if (!(preg_match($this->validDateRegex, $startDate) > 0)) {
-			$errors[] = "Invalid start date, must be in ISO8601 format, i.e. 2022-12-31T14:59:00Z";
-		}
-		if ($endDate != null) {
-			if ((!preg_match($this->validDateRegex, $endDate) > 0)) {
-				$errors[] = "Invalid end date, must be in ISO8601 format, i.e. 2022-12-31T14:59:00Z";
-			}
-			if ($startDate > $endDate) {
-				$errors[] = "End date cannot be before start date!";
-			}
-		}
 		if ($durationUnit != "HOURS" && $durationUnit != "DAYS" && $durationUnit != "WEEKS") {
 			$durationUnit = "DAYS";
 		}
+
 		$duration = $this->calculateDuration($startDate, $endDate, $durationUnit);
-		if ($externalId != null) {
-			if (strlen($externalId) > 255) {
-				$errors[] = "External ID exceeds limit of 255 characters!";
-			}
-		}
-		if ($color != null) {
-			if ((!preg_match($this->validColorCodeRegex, $color))) {
-				$errors[] = "Invalid color code";
-			}
-		}
+		
 		if ($status != "NEW" && $status != "PLANNED" && $status != "DELETED") {
 			$status = "NEW";
 		}
-		if (empty($errors)) {
 			$stmt = $this->db->prepare("
 			UPDATE construction_stages
 			    SET 
@@ -224,8 +167,6 @@ class ConstructionStages
 				'status' => $status,
 			]);
 			return $this->getSingle($id);
-		}
-		return $errors;
 	}
 
 	/**
@@ -280,5 +221,12 @@ class ConstructionStages
 			$interval = strtotime($endDate) - strtotime($startDate);
 			return $interval / 604800;
 		}
+	}
+	private function validateFields(ConstructionStagesCreate $data){
+		Validators::validateName($data->name);
+		Validators::validateStartDate($data->startDate);
+		Validators::validateEndDate($data->startDate, $data->endDate);
+		Validators::validateExternalId($data->externalId);
+		Validators::validateColor($data->color);
 	}
 }

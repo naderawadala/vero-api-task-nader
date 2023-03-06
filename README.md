@@ -20,3 +20,6 @@ There is a validation system which checks every posted field against a set of ru
 - `color` is either `null` or a valid HEX color i.e. `#FF0000`
 - `externalId` is `null` or any string up to 255 characters in length
 - `status` is one of `NEW`, `PLANNED` or `DELETED` and the default value is `NEW`.
+
+## Alternate branch:
+There is a seperate branch where validation was handled in a different way, which I would like to request feedback on.

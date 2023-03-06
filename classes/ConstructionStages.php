@@ -105,7 +105,7 @@ class ConstructionStages
 				$errors[] = "End date cannot be before start date!";
 			}
 		}
-		if ($durationUnit != "HOURS" || $durationUnit != "DAYS" || $durationUnit != "WEEKS") {
+		if ($durationUnit != "HOURS" && $durationUnit != "DAYS" && $durationUnit != "WEEKS") {
 			$durationUnit = "DAYS";
 		}
 		$duration = $this->calculateDuration($startDate, $endDate, $durationUnit);
@@ -119,7 +119,7 @@ class ConstructionStages
 				$errors[] = "Invalid color code";
 			}
 		}
-		if ($status != "NEW" || $status != "PLANNED" || $status != "DELETED") {
+		if ($status != "NEW" && $status != "PLANNED" && $status != "DELETED") {
 			$status = "NEW";
 		}
 		if (empty($errors)) {
@@ -180,7 +180,7 @@ class ConstructionStages
 				$errors[] = "End date cannot be before start date!";
 			}
 		}
-		if ($durationUnit != "HOURS" || $durationUnit != "DAYS" || $durationUnit != "WEEKS") {
+		if ($durationUnit != "HOURS" && $durationUnit != "DAYS" && $durationUnit != "WEEKS") {
 			$durationUnit = "DAYS";
 		}
 		$duration = $this->calculateDuration($startDate, $endDate, $durationUnit);
@@ -194,7 +194,7 @@ class ConstructionStages
 				$errors[] = "Invalid color code";
 			}
 		}
-		if ($status != "NEW" || $status != "PLANNED" || $status != "DELETED") {
+		if ($status != "NEW" && $status != "PLANNED" && $status != "DELETED") {
 			$status = "NEW";
 		}
 		if (empty($errors)) {
@@ -262,10 +262,6 @@ class ConstructionStages
 	 */
 	private function calculateDuration($startDate, $endDate, $durationUnit)
 	{
-		$end = new DateTime($endDate);
-		$start = new DateTime($startDate);
-		$interval = $start->diff($end);
-
 		if ($endDate == null) {
 			return null;
 		}
@@ -273,13 +269,16 @@ class ConstructionStages
 			return null;
 		}
 		if ($durationUnit == "DAYS") {
-			return $interval->d;
+			$interval = strtotime($endDate) - strtotime($startDate);
+			return $interval / 86400;
 		}
 		if ($durationUnit == "HOURS") {
-			return $interval->h;
+			$interval = strtotime($endDate) - strtotime($startDate);
+			return $interval / 3600;
 		}
 		if ($durationUnit == "WEEKS") {
-			return $interval-> d / 7.0;
+			$interval = strtotime($endDate) - strtotime($startDate);
+			return $interval / 604800;
 		}
 	}
 }

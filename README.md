@@ -22,4 +22,4 @@ There is a validation system which checks every posted field against a set of ru
 - `status` is one of `NEW`, `PLANNED` or `DELETED` and the default value is `NEW`.
 
 ## Alternate branch:
-There is a seperate branch where validation was handled in a different way, which I would like to request feedback on.
+There is a seperate branch called `ValidatorExperiment` where validation was handled in a different way, which I would like to request feedback on.
